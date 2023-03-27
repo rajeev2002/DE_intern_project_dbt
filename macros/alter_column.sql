@@ -1,21 +1,38 @@
-{%- macro alter_column() -%}
-    {%- set drop_query -%}
-    ALTER TABLE bustabitdb.public.cleaned_bustabit ADD COLUMN losses double, gameWon int ,gameLost int;
-    UPDATE bustabitdb.public.cleaned_bustabit
-    SET losses = CASE
-    WHEN profit =0 THEN bet
-    ELSE 0
+{%- macro alter_column(table,columnList) -%}
+
+    {%- set alter_query -%}
+          ALTER TABLE {{table}} ADD COLUMN losses double, gameWon int ,gameLost int;
+
+        {% for columnn in columnList %}
+            UPDATE {{table}}
+            SET {{columnn}} = CASE 
+            {% if columnn == 'losses' %}
+            WHEN profit =0 THEN bet  
+                ELSE 0  
+                END ; 
+    {% elif columnn=='gameWon' %}
+
+        WHEN profit=0 THEN 0  
+        ELSE 1  
+        END ;
+        {%else %}
+        WHEN profit=0 THEN 1  
+    ELSE 0  
     END ;
-    UPDATE bustabitdb.public.cleaned_bustabit
-    SET gameWon = CASE
-    WHEN profit=0 THEN 0
-    ELSE 1
-    END ;
-    UPDATE bustabitdb.public.cleaned_bustabit
-    SET gameLost = CASE
-    WHEN profit=0 THEN 1
-    ELSE 0
-    END ;
+    {% endif %}       
+     {% endfor %}
     {%- endset -%}
-    {% do run_query(drop_query) %}
+    {% do run_query(alter_query) %}
 {%- endmacro -%}
+
+
+
+
+
+
+
+
+
+
+
+
